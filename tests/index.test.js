@@ -37,7 +37,8 @@ describe("Authentication", () => {
             const password = "12345ahmedsaber";
             await axios.post(`${BACKEND_URL}/api/v1/signup`, {
                 username,
-                password
+                password,
+                type: "user"
             });
         } catch (error) {
             expect(error.response.status).toBe(400);
@@ -51,7 +52,8 @@ describe("Authentication", () => {
 
             await axios.post(`${BACKEND_URL}/api/v1/signup`, {
                 username,
-                password
+                password,
+                type: "user"
             });
 
             const response = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
@@ -71,7 +73,8 @@ describe("Authentication", () => {
             const password = "12345Ahmedsaber";
             await axios.post(`${BACKEND_URL}/api/v1/signup`, {
                 username,
-                password
+                password,
+                type: "user"
             });
             await axios.post(`${BACKEND_URL}/api/v1/signin`, {
                 username: "WrongUsername",
@@ -111,6 +114,10 @@ describe("User avatar information", () => {
             const avatarCreationResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/avatar`, {
                 imageURL: "https://encrypted-ibn0.gstatic.com/images?q=ibn:ANd9GcQm3RFDZW21teuCMFYx_AROjt-AzlwDBROFww&s",
                 name: "Timmy"
+            } , {
+                headers : {
+                    authorization : `Bearer ${token}`
+                }
             });
             avatarId = avatarCreationResponse.data.avatarId;
         } catch (error) {
@@ -664,3 +671,162 @@ describe("Arena endpoints", () => {
         expect(response.data.elements.length).toBe(4);
     });
 });
+
+describe("Admin endpoints" , () => {
+    let adminId, adminToken;
+    let userId, userToken;
+
+    beforeAll(async () => {
+        try {
+            const randomSuffix = Math.floor(Math.random() * 10000);
+            const adminUsername = `Admin${randomSuffix}`;
+            const userUsername = `User${randomSuffix}`;
+            const password = "12345Ahmedsaber";
+
+            // Signup as admin
+            const responseSignupAdmin = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
+                username: adminUsername,
+                password,
+                type: "admin"
+            });
+            adminId = responseSignupAdmin.data.adminId;
+
+            // Signin as admin
+            const responseSigninAdmin = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
+                username: adminUsername,
+                password,
+            });
+            adminToken = responseSigninAdmin.data.token;
+
+            // Signup as user
+            const responseSignupUser = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
+                username: userUsername,
+                password,
+                type: "user"
+            });
+            userId = responseSignupUser.data.userId;
+
+            // Signin as user
+            const responseSigninUser = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
+                username: userUsername,
+                password
+            });
+            userToken = responseSigninUser.data.token;
+
+        } catch (error) {
+            console.error("Error during setup:", error);
+        }
+    });
+
+    test("User cant access admin endpoints" , async () => {
+        // Create an element
+        const element1Response = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+            imageUrl: "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd96CRCRea3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXQIKJTG1GpZ9ZgSGYafQPToMy_JTomV5RHXsAsWQC3tkNMLH_CsibsSZSoJtbakq&usqp=CAE",
+            width: 1,
+            height: 1,
+            static: true
+        }, {
+            headers: {
+                authorization: `Bearer ${userToken}`
+            }
+        });
+        // Create a map
+        const mapResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/map`, {
+            thumbnail: "https://thumbnail.com/a.png",
+            dimensions: "100x200",
+            defaultElements: []
+        }, {
+            headers: {
+                authorization: `Bearer ${userToken}`
+            }
+        });
+        // Creatr an avatar
+        const avatarCreationResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/avatar`, {
+            imageURL: "https://encrypted-ibn0.gstatic.com/images?q=ibn:ANd9GcQm3RFDZW21teuCMFYx_AROjt-AzlwDBROFww&s",
+            name: "Timmy"
+        }, {
+            headers: {
+                authorization: `Bearer ${userToken}`
+            }
+        });
+        // Update element 
+        const updateElementResponse = await axios.put(`${BACKEND_URL}/api/v1/admin/element/1` , {
+            imageURL: "https://encrypted-ibn0.gstatic.com/images?q=ibn:ANd9GcQm3RFDZW21teuCMFYx_AROjt-AzlwDBROFww&s"
+        } , {
+            headers : {
+                authorization : `Bearer ${userToken}`
+            }
+        });
+        expect(element1Response.status).toBe(403);
+        expect(mapResponse.status).toBe(403);
+        expect(avatarCreationResponse.status).toBe(403);
+        expect(updateElementResponse.status).toBe(403) ;
+    });
+
+    test("Admin can access admin endpoints" , async () => {
+        // Create an element
+        const element1Response = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+            imageUrl: "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd96CRCRea3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXQIKJTG1GpZ9ZgSGYafQPToMy_JTomV5RHXsAsWQC3tkNMLH_CsibsSZSoJtbakq&usqp=CAE",
+            width: 1,
+            height: 1,
+            static: true
+        }, {
+            headers: {
+                authorization: `Bearer ${adminToken}`
+            }
+        });
+        // Create a map
+        const mapResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/map`, {
+            thumbnail: "https://thumbnail.com/a.png",
+            dimensions: "100x200",
+            defaultElements: []
+        }, {
+            headers: {
+                authorization: `Bearer ${adminToken}`
+            }
+        });
+        // Creatr an avatar
+        const avatarCreationResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/avatar`, {
+            imageURL: "https://encrypted-ibn0.gstatic.com/images?q=ibn:ANd9GcQm3RFDZW21teuCMFYx_AROjt-AzlwDBROFww&s",
+            name: "Timmy"
+        }, {
+            headers: {
+                authorization: `Bearer ${adminToken}`
+            }
+        });
+        // Update element 
+        const updateElementResponse = await axios.put(`${BACKEND_URL}/api/v1/admin/element/1` , {
+            imageURL: "https://encrypted-ibn0.gstatic.com/images?q=ibn:ANd9GcQm3RFDZW21teuCMFYx_AROjt-AzlwDBROFww&s"
+        } , {
+            headers : {
+                authorization : `Bearer ${adminToken}`
+            }
+        });
+        expect(element1Response.status).toBe(200);
+        expect(mapResponse.status).toBe(200);
+        expect(avatarCreationResponse.status).toBe(200);
+        expect(updateElementResponse.status).toBe(200) ;
+    });
+
+    test("Admin can update the imageUrl for an element" , async () => {
+        const elementResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+            imageUrl: "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd96CRCRea3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXQIKJTG1GpZ9ZgSGYafQPToMy_JTomV5RHXsAsWQC3tkNMLH_CsibsSZSoJtbakq&usqp=CAE",
+            width: 1,
+            height: 1,
+            static: true
+        }, {
+            headers: {
+                authorization: `Bearer ${adminToken}`
+            }
+        });
+        const updateElementResponse = await axios.put(`${BACKEND_URL}/api/v1/admin/element/${elementResponse.data.id}` , {
+            imageURL: "https://encrypted-ibn0.gstatic.com/images?q=ibn:ANd9GcQm3RFDZW21teuCMFYx_AROjt-AzlwDBROFww&s"
+        } , {
+            headers : {
+                authorization : `Bearer ${adminToken}`
+            }
+        });
+        expect(updateElementResponse.status).toBe(200);
+    });
+}); 
+
