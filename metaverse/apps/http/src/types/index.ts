@@ -30,6 +30,10 @@ const deleteSpaceSchema = z.object({
   spaceId: z.string(),
 });
 
+const deleteElementSpaceSchema = z.object({
+  id: z.string() 
+})
+
 const addElementSchema = z.object({
   elementId: z.string(),
   spaceId: z.string(),
@@ -82,6 +86,7 @@ export {
   updateMetadataSchema,
   createSpaceSchema,
   deleteSpaceSchema,
+  deleteElementSpaceSchema,
   addElementSchema,
   createElementSchema,
   updateElementSchema,
