@@ -67,6 +67,14 @@ const createMapSchema = z.object({
   ),
 });
 
+declare global {
+    namespace Express {
+        export interface Request {
+            role?: "Admin" | "User";
+            userId?: string
+        }
+    }
+}
 // Use ESM export syntax for consistency
 export {
   SignupSchema,

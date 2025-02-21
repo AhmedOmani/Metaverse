@@ -121,66 +121,66 @@ describe("Authentication", () => {
     });
 });
 
-// describe("User avatar information", () => {
-//     let token, avatarId, adminId;
+describe("User avatar information", () => {
+    let token, avatarId, adminId;
 
-//     beforeAll(async () => {
-//         try {
-//             const username = "Omani" + Math.random();
-//             const password = "12345Ahmedsaber";
-//             const type = "admin";
+    beforeAll(async () => {
+        try {
+            const username = "Omani" + Math.random();
+            const password = "12345Ahmedsaber";
+            const type = "admin";
 
-//             // Signup
-//             const responseSignup = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
-//                 username,
-//                 password,
-//                 type
-//             });
-//             adminId = responseSignup.data.adminId;
+            // Signup
+            const responseSignup = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
+                username,
+                password,
+                type
+            });
+            adminId = responseSignup.data.adminId;
 
-//             // Signin
-//             const responseSignin = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
-//                 username,
-//                 password
-//             });
-//             token = responseSignin.data.token;
+            // Signin
+            const responseSignin = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
+                username,
+                password
+            });
+            token = responseSignin.data.token;
 
-//             // Create avatar
-//             const avatarCreationResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/avatar`, {
-//                 imageURL: "https://encrypted-ibn0.gstatic.com/images?q=ibn:ANd9GcQm3RFDZW21teuCMFYx_AROjt-AzlwDBROFww&s",
-//                 name: "Timmy"
-//             } , {
-//                 headers : {
-//                     authorization : `Bearer ${token}`
-//                 }
-//             });
-//             avatarId = avatarCreationResponse.data.avatarId;
-//         } catch (error) {
-//             console.error("Error during setup:", error);
-//         }
-//     });
+            // Create avatar
+            const avatarCreationResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/avatar`, {
+                imageURL: "https://encrypted-ibn0.gstatic.com/images?q=ibn:ANd9GcQm3RFDZW21teuCMFYx_AROjt-AzlwDBROFww&s",
+                name: "Timmy"
+            } , {
+                headers : {
+                    authorization : `Bearer ${token}`
+                }
+            });
+            avatarId = avatarCreationResponse.data.avatarId;
+        } catch (error) {
+            console.error("Error during setup:", error);
+        }
+    });
 
-//     test("Get back avatar details for a user", async () => {
-//         try {
-//             const response = await axios.get(`${BACKEND_URL}/api/v1/user/metadata/bulk?ids=[${adminId}]`);
-//             expect(response.data.avatars.length).toBe(1);
-//             expect(response.data.avatars[0].adminId).toBe(adminId);
-//         } catch (error) {
-//             console.error("Error in test:", error);
-//         }
-//     });
+    test("Get back avatar details for a user", async () => {
+        try {
+            const response = await axios.get(`${BACKEND_URL}/api/v1/user/metadata/bulk?ids=[${adminId}]`);
+            expect(response.data.avatars.length).toBe(1);
+            expect(response.data.avatars[0].adminId).toBe(adminId);
+        } catch (error) {
+            console.error("Error in test:", error);
+        }
+    });
 
-//     test("Get available avatars and check if current avatar created exists", async () => {
-//         try {
-//             const response = await axios.get(`${BACKEND_URL}/api/v1/avatars`);
-//             expect(response.data.avatars.length).not.toBe(0);
-//             const currentAvatar = response.data.avatars.find(x => x.id === avatarId);
-//             expect(currentAvatar).toBeDefined();
-//         } catch (error) {
-//             console.error("Error in test:", error);
-//         }
-//     });
-// });
+    test("Get available avatars and check if current avatar created exists", async () => {
+        try {
+            const response = await axios.get(`${BACKEND_URL}/api/v1/avatars`);
+            expect(response.data.avatars.length).not.toBe(0);
+            const currentAvatar = response.data.avatars.find(x => x.id === avatarId);
+            expect(currentAvatar).toBeDefined();
+        } catch (error) {
+            console.error("Error in test:", error);
+        }
+    });
+});
 
 // describe("User metadata endpoints", () => {
 //     let token = "";
