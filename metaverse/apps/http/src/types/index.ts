@@ -62,6 +62,7 @@ const createMapSchema = z.object({
   dimensions: z.string().refine((val) => dimensionRegex.test(val), {
     message: "Dimensions must be in the format 'widthxheight' (e.g., '100x100')",
   }),
+  name: z.string(),
   defaultElements: z.array(
     z.object({
       elementId: z.string(),
