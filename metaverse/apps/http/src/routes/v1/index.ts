@@ -5,7 +5,7 @@ import {userRoutes} from "./user";
 import * as validation from "../../types"
 import {hash , compare} from "../../script"
 import jwt from "jsonwebtoken"
-const client = require("@repo/db/client")
+import client from "@repo/db/client"
 import {JWT_PASSWORD} from "../../config"
 
 export const router = Router() ;
@@ -13,6 +13,7 @@ export const router = Router() ;
 router.post("/signup" , async (req , res) => {
     //validate data
     const parseData = validation.SignupSchema.safeParse(req.body);
+    
     if (!parseData.success) {
         res.status(400).json({
             message: "Validation error during signup"
@@ -48,6 +49,8 @@ router.post("/signin" , async (req , res) => {
         return ;
     }
 
+    console.log(req.body);
+
     try {   
         const user = await client.user.findUnique({
             where: {
@@ -78,8 +81,7 @@ router.post("/signin" , async (req , res) => {
         res.status(200).json({
             message: "Signin successfully",
             token : token
-        })
-
+        });
 
     } catch (e) {
         res.status(500).json({
@@ -89,12 +91,28 @@ router.post("/signin" , async (req , res) => {
     
 });
 
-router.get("/elements" , (req , res) => {
-
+router.get("/elements", async (req, res) => {
+    const elements: { id: string; width: number; height: number; static: boolean; imageUrl: string }[] = await client.element.findMany();
+    res.json({
+        elements: elements.map(e => ({
+            id: e.id,
+            width: e.width,
+            height: e.height,
+            static: e.static,
+            imageUrl: e.imageUrl
+        })),
+    });
 });
 
-router.get("/avatars" , (req , res) => {
-
+router.get("/avatars" , async (req , res) => {
+    const avatars: {id: string , imageUrl: string | null , name: string | null} [] = await client.avatar.findMany();
+    res.json({
+        avatars: avatars.map(x => ({
+            id: x.id,
+            imageUrl: x.imageUrl ,
+            name: x.name ,
+        }))
+    })
 });
 
 router.use("/admin" , adminRoutes);

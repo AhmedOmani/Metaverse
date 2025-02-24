@@ -13,18 +13,18 @@ model User {
   password String
   avatarId String?
   role     Role
-  spaces   Space[]
-  avatar   Avatar? @relation(fields: [avatarId], references: [id])
+  spaces   Space[]   // No `onDelete` here because it's not the foreign key side
+  avatar   Avatar?   @relation(fields: [avatarId], references: [id], onDelete: SetNull)
 }
 
 model Space {
-  id        String          @id @unique @default(cuid())
+  id        String   @id @unique @default(cuid())
   name      String
   width     Int
   heigth    Int
   thumbnail String?
   creatorId String
-  creator   User            @relation(fields: [creatorId], references: [id])
+  creator   User     @relation(fields: [creatorId], references: [id], onDelete: Cascade) // Cascade delete applied correctly
   elements  spaceElements[]
 }
 
@@ -34,8 +34,8 @@ model spaceElements {
   y         Int
   spaceId   String
   elementId String
-  element   Element @relation(fields: [elementId], references: [id])
-  space     Space   @relation(fields: [spaceId], references: [id])
+  element   Element @relation(fields: [elementId], references: [id], onDelete: Cascade)
+  space     Space   @relation(fields: [spaceId], references: [id], onDelete: Cascade)
 }
 
 model Element {
@@ -44,7 +44,7 @@ model Element {
   height      Int
   static      Boolean
   imageUrl    String
-  mapElements MapElements[]
+  mapElements MapElements[]  
   spaces      spaceElements[]
 }
 
@@ -63,15 +63,15 @@ model MapElements {
   elementId String
   x         Int?
   y         Int?
-  element   Element @relation(fields: [elementId], references: [id])
-  map       Map     @relation(fields: [mapId], references: [id])
+  element   Element @relation(fields: [elementId], references: [id], onDelete: Cascade)
+  map       Map     @relation(fields: [mapId], references: [id], onDelete: Cascade)
 }
 
 model Avatar {
   id       String  @id @unique @default(cuid())
   imageUrl String?
   name     String?
-  user     User[]
+  user     User[]  // No `onDelete` here since it's a one-to-many relation
 }
 
 enum Role {

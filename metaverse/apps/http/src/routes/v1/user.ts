@@ -5,6 +5,7 @@ import {userMiddleware} from "../../ middleware/user"
 export const userRoutes = Router() ;
 
 userRoutes.post("/metadata" , userMiddleware , async (req , res) => {
+    console.log(req.body);
     const parsedData = validation.updateMetadataSchema.safeParse(req.body) ;
     if (!parsedData.success) {
         res.status(400).json({

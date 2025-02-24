@@ -3,15 +3,14 @@ import z from "zod";
 const dimensionRegex = /^[0-9]{1,4}x[0-9]{1,4}$/;
 
 const SignupSchema = z.object({
-  username: z.string().nonempty() ,
+  username: z.string() ,
   password: z.string().min(8),
-  type: z.enum(["user", "admin"]),
+  type: z.string()
 });
 
 const SigninSchema = z.object({
-  username: z.string().email(),
+  username: z.string(),
   password: z.string().min(8),
-  type: z.enum(["user", "admin"]),
 });
 
 const updateMetadataSchema = z.object({
@@ -23,7 +22,7 @@ const createSpaceSchema = z.object({
   dimensions: z.string().refine((val) => dimensionRegex.test(val), {
     message: "Dimensions must be in the format 'widthxheight' (e.g., '100x100')",
   }),
-  mapId: z.string(),
+  mapId: z.string()
 });
 
 const deleteSpaceSchema = z.object({

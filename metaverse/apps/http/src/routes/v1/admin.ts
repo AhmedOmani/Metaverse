@@ -69,7 +69,7 @@ adminRoutes.post("/avatar" , adminMiddleware , async (req , res) => {
 adminRoutes.post("/map", adminMiddleware, async (req, res) => {
     const parsedData = validation.createMapSchema.safeParse(req.body);
 
-    if (!parsedData.success) {  
+    if (!parsedData.success) {
         res.status(400).json({ message: "Validation failed" });
         return;
     }

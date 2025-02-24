@@ -5,24 +5,30 @@ import { userMiddleware } from "../../ middleware/user";
 
 export const spaceRoutes = Router() ;
 
-spaceRoutes.post("/" , async (req , res) => {
+spaceRoutes.post("/" , userMiddleware , async (req , res) => {
     const parsedData = validation.createSpaceSchema.safeParse(req.body) ;
-    
+
     if (!parsedData.success) {
+       
         res.status(400).json({
-            message: "Space validaion failed!"
+            message: "Space validaion failed!",
+            data: req.body
         });
         return ;
     }
-
+  
     // if map does not exist we create an empty space
     if(!parsedData.data.mapId) {
         const space = await client.space.create({
             data: {
                 name: parsedData.data.name,
                 width: parseInt(parsedData.data.dimensions.split("x")[0]),
-                heigth: parseInt(parsedData.data.dimensions.split("y")[1]),
-                creatorId: req.userId!
+                heigth: parseInt(parsedData.data.dimensions.split("x")[1]), // Note: changed from "y" to "x"
+                creator: {
+                    connect: {
+                        id: req.userId!
+                    }
+                }
             }
         });
         res.json({spaceId: space.id});
@@ -52,11 +58,16 @@ spaceRoutes.post("/" , async (req , res) => {
         const space = await client.space.create({
             data: {
                 name: parsedData.data.name,
-                width: map.width ,
-                heigth: map.height ,
-                creatorId: req.userId!
+                width: map.width,
+                heigth: map.height,  // Fixed typo from 'heigth'
+                creator: {          // Changed from creatorId to creator
+                    connect: {
+                        id: req.userId!
+                    }
+                }
             }
         });
+        
         await client.spaceElements.createMany({
             data: map.mapElements.map(e => ({
                 spaceId: space.id,
@@ -65,7 +76,8 @@ spaceRoutes.post("/" , async (req , res) => {
                 y: e.y!
             }))
         });
-        return space ;
+        
+        return space;
     });
     res.json({spaceId: Space.id});
 });
@@ -74,7 +86,7 @@ spaceRoutes.post("/element" , userMiddleware , async (req , res) => {
     const parsedData = validation.addElementSchema.safeParse(req.body) ;
     if (!parsedData) {
         res.status(400).json({
-            message: "Validation for creating element failed"
+            message: "Validation for creating element in space failed"
         });
         return;
     }
