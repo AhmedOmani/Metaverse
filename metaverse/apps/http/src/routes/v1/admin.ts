@@ -51,24 +51,29 @@ adminRoutes.put("/element/:elementId", async (req , res) => {
 
 adminRoutes.post("/avatar" , adminMiddleware , async (req , res) => {
     const parsedData = validation.createAvatar.safeParse(req.body) ;
-    if (!parsedData) {
+    if (!parsedData.success) {
         res.status(400).json({
             message: "validation failed"
         });
         return ;
     }
+ 
+    const adminId = req.userId ;
+
     const avatar = await client.avatar.create({
         data: {
             name: parsedData.data?.name,
-            imageUrl: parsedData.data?.imageUrl
+            imageUrl: parsedData.data?.imageURL,
+            user: {
+                connect: {id : adminId}
+            }
         }
     });
     res.json({id: avatar.id});
 });
 
 adminRoutes.post("/map", adminMiddleware, async (req, res) => {
-    const parsedData = validation.createMapSchema.safeParse(req.body);
-
+    const parsedData = validation.createMapSchema.safeParse(req.body);  
     if (!parsedData.success) {
         res.status(400).json({ message: "Validation failed" });
         return;

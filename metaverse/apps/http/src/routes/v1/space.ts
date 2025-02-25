@@ -9,7 +9,7 @@ spaceRoutes.post("/" , userMiddleware , async (req , res) => {
     const parsedData = validation.createSpaceSchema.safeParse(req.body) ;
 
     if (!parsedData.success) {
-       
+
         res.status(400).json({
             message: "Space validaion failed!",
             data: req.body
@@ -82,6 +82,37 @@ spaceRoutes.post("/" , userMiddleware , async (req , res) => {
     res.json({spaceId: Space.id});
 });
 
+spaceRoutes.delete("/element" , userMiddleware , async (req , res) => {
+    console.log("aloooooo");
+    const parsedData = validation.deleteElementSpaceSchema.safeParse(req.body);
+    if (!parsedData) {
+        res.status(400).json({
+            message: "deleting element failed cause validation error"
+        });
+        return ;
+    }
+    const spaceElement = await client.spaceElements.findFirst({
+        where: {
+            id: parsedData.data?.id
+        },
+        include:{
+            space: true
+        }
+    });
+    if (!spaceElement?.space.creatorId || spaceElement.space.creatorId !== req.userId) {
+        res.status(403).json({
+            message: "Unauthorized"
+        });
+    }
+    const response = await client.spaceElements.delete({
+        where: {
+            id: parsedData.data?.id
+        }
+    });
+    console.log(response);
+    res.json({message: "Element deleted from space"});
+});
+
 spaceRoutes.post("/element" , userMiddleware , async (req , res) => {
     const parsedData = validation.addElementSchema.safeParse(req.body) ;
     if (!parsedData) {
@@ -90,18 +121,19 @@ spaceRoutes.post("/element" , userMiddleware , async (req , res) => {
         });
         return;
     }
-    const space = await client.space.findUnique({
+    const space = await client.space.findFirst({
         where:{
-            id: req.params.spaceId,
+            id: parsedData.data?.spaceId,
             creatorId: req.userId!
         }, select: {
             width: true,
             heigth: true
         }
     });
+    
     if (req.body.x < 0 || req.body.y < 0 || req.body.x > space?.width! || req.body.y > space?.heigth!) {
         res.status(400).json({
-            message: "Poibt is outside of the boundray"
+            message: "Point is outside of the boundray"
         });
         return;
     }
@@ -109,7 +141,8 @@ spaceRoutes.post("/element" , userMiddleware , async (req , res) => {
         res.status(400).json({message: "Space not found"});
         return;
     }
-    await client.spaceElements.create({
+    
+    const response = await client.spaceElements.create({
         data: {
             spaceId: req.body.spaceId,
             elementId: req.body.elementId,
@@ -117,6 +150,7 @@ spaceRoutes.post("/element" , userMiddleware , async (req , res) => {
             y: req.body.y
         }
     });
+    console.log(response);
     res.json({message: "Element added"});
 });
 
@@ -210,31 +244,4 @@ spaceRoutes.delete("/:spaceId" , userMiddleware , async (req , res) => {
     });
 });
 
-spaceRoutes.delete("/element" , userMiddleware , async (req , res) => {
-    const parsedData = validation.deleteElementSpaceSchema.safeParse(req.body);
-    if (!parsedData) {
-        res.status(400).json({
-            message: "deleting element failed cause validation error"
-        });
-        return ;
-    }
-    const spaceElement = await client.spaceElements.findFirst({
-        where: {
-            id: parsedData.data?.id
-        },
-        include:{
-            space: true
-        }
-    });
-    if (!spaceElement?.space.creatorId || spaceElement.space.creatorId !== req.userId) {
-        res.status(403).json({
-            message: "Unauthorized"
-        });
-    }
-    await client.spaceElements.delete({
-        where: {
-            id: parsedData.data?.id
-        }
-    });
-    res.json({message: "Element deleted from space"});
-});
+

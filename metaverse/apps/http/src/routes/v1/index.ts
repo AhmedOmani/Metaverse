@@ -49,8 +49,6 @@ router.post("/signin" , async (req , res) => {
         return ;
     }
 
-    console.log(req.body);
-
     try {   
         const user = await client.user.findUnique({
             where: {

@@ -5,7 +5,6 @@ import {userMiddleware} from "../../ middleware/user"
 export const userRoutes = Router() ;
 
 userRoutes.post("/metadata" , userMiddleware , async (req , res) => {
-    console.log(req.body);
     const parsedData = validation.updateMetadataSchema.safeParse(req.body) ;
     if (!parsedData.success) {
         res.status(400).json({
@@ -13,6 +12,20 @@ userRoutes.post("/metadata" , userMiddleware , async (req , res) => {
         });
         return ;
     }
+
+    const avatarExist = await client.avatar.findUnique({
+        where: {
+            id: parsedData.data.avatarId
+        }
+    });
+
+    if (!avatarExist) {
+        res.status(400).json({
+            message: "avatar does not exist"
+        });
+        return ;
+    }
+
     await client.user.update({
         where: { 
             id: req.userId
@@ -29,6 +42,7 @@ userRoutes.post("/metadata" , userMiddleware , async (req , res) => {
 userRoutes.get("/metadata/bulk" , async (req , res) => {
     const userIdString = (req.query.ids ?? "[]") as string;
     const userIds = userIdString.slice(1, userIdString.length - 1).split(",");
+
     const metadata = await client.user.findMany({
         where: {
             id: {
@@ -39,12 +53,13 @@ userRoutes.get("/metadata/bulk" , async (req , res) => {
             id: true
         }
     });
+    
     res.status(200).json({
         avatars: metadata.map(m => ({
-            userId: m.id ,
-            avatarId:m.avatar?.imageUrl
+            userId: m.id,
+            avatarId: m.avatar?.imageUrl
         }))
-    });
+    })
 });
 
 

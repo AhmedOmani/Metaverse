@@ -53,7 +53,7 @@ const updateElementSchema = z.object({
 
 const createAvatar = z.object({
   name: z.string(),
-  imageUrl: z.string(),
+  imageURL: z.string(),
 });
 
 const createMapSchema = z.object({
