@@ -175,7 +175,7 @@ describe("User metadata endpoints", () => {
             if (error.response) {
                 expect(error.response.status).toBe(400);
             } else {
-                console.log("Unexp err" , error);
+                console.error("Unexp err" , error);
             }
         }
     });
@@ -743,6 +743,7 @@ describe("Admin endpoints" , () => {
                 authorization : `Bearer ${userToken}`
             }
         });
+        
         expect(element1Response.status).toBe(403);
         expect(mapResponse.status).toBe(403);
         expect(avatarCreationResponse.status).toBe(403);
@@ -765,7 +766,12 @@ describe("Admin endpoints" , () => {
         const mapResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/map`, {
             thumbnail: "https://thumbnail.com/a.png",
             dimensions: "100x200",
-            defaultElements: []
+            name: "Omaniii map",
+            defaultElements: [
+                { elementId: element1Response.data.id , x: 20, y: 20 },
+                { elementId: element1Response.data.id , x: 18, y: 20 },
+                { elementId: element1Response.data.id , x: 20, y: 20 }
+            ]
         }, {
             headers: {
                 authorization: `Bearer ${adminToken}`
@@ -781,8 +787,8 @@ describe("Admin endpoints" , () => {
             }
         });
         // Update element 
-        const updateElementResponse = await axios.put(`${BACKEND_URL}/api/v1/admin/element/1` , {
-            imageURL: "https://encrypted-ibn0.gstatic.com/images?q=ibn:ANd9GcQm3RFDZW21teuCMFYx_AROjt-AzlwDBROFww&s"
+        const updateElementResponse = await axios.put(`${BACKEND_URL}/api/v1/admin/element/${element1Response.data.id}` , {
+            imageUrl: "https://encrypted-ibn0.gstatic.com/images?q=ibn:ANd9GcQm3RFDZW21teuCMFYx_AROjt-AzlwDBROFww&s"
         } , {
             headers : {
                 authorization : `Bearer ${adminToken}`
@@ -791,7 +797,7 @@ describe("Admin endpoints" , () => {
         expect(element1Response.status).toBe(200);
         expect(mapResponse.status).toBe(200);
         expect(avatarCreationResponse.status).toBe(200);
-        expect(updateElementResponse.status).toBe(200) ;
+        expect(updateElementResponse.status).toBe(200);
     });
 
     test("Admin can update the imageUrl for an element" , async () => {
@@ -806,7 +812,7 @@ describe("Admin endpoints" , () => {
             }
         });
         const updateElementResponse = await axios.put(`${BACKEND_URL}/api/v1/admin/element/${elementResponse.data.id}` , {
-            imageURL: "https://encrypted-ibn0.gstatic.com/images?q=ibn:ANd9GcQm3RFDZW21teuCMFYx_AROjt-AzlwDBROFww&s"
+            imageUrl: "https://encrypted-ibn0.gstatic.com/images?q=ibn:ANd9GcQm3RFDZW21teuCMFYx_AROjt-AzlwDBROFww&s"
         } , {
             headers : {
                 authorization : `Bearer ${adminToken}`

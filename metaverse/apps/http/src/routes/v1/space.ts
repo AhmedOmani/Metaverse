@@ -83,7 +83,6 @@ spaceRoutes.post("/" , userMiddleware , async (req , res) => {
 });
 
 spaceRoutes.delete("/element" , userMiddleware , async (req , res) => {
-    console.log("aloooooo");
     const parsedData = validation.deleteElementSpaceSchema.safeParse(req.body);
     if (!parsedData) {
         res.status(400).json({
@@ -109,7 +108,6 @@ spaceRoutes.delete("/element" , userMiddleware , async (req , res) => {
             id: parsedData.data?.id
         }
     });
-    console.log(response);
     res.json({message: "Element deleted from space"});
 });
 
@@ -150,7 +148,6 @@ spaceRoutes.post("/element" , userMiddleware , async (req , res) => {
             y: req.body.y
         }
     });
-    console.log(response);
     res.json({message: "Element added"});
 });
 

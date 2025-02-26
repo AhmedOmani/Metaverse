@@ -13,7 +13,6 @@ export const userMiddleware = (req: Request , res:Response , next: NextFunction)
     }
     try {
         const decode = jwt.verify(token , JWT_PASSWORD) as {userId: string , role: string};
-        console.log(decode);
         req.userId = decode.userId
         next();
     } catch (e) {

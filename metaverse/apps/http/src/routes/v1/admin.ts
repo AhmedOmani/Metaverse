@@ -7,7 +7,7 @@ export const adminRoutes = Router() ;
 
 adminRoutes.post("/element" , adminMiddleware , async (req , res) =>{
     const parsedData = validation.createElementSchema.safeParse(req.body) ;
-    if (!parsedData) {
+    if (!parsedData.success) {
         res.status(400).json({
             message: "validation failed"
         });
@@ -30,9 +30,9 @@ adminRoutes.post("/element" , adminMiddleware , async (req , res) =>{
    res.json({message: "Element created" , id: element.id});
 });
 
-adminRoutes.put("/element/:elementId", async (req , res) => {
+adminRoutes.put("/element/:elementId", adminMiddleware , async (req , res) => {
     const parsedData = validation.updateElementSchema.safeParse(req.body) ;
-    if (!parsedData) {
+    if (!parsedData.success) {
         res.status(400).json({
             message: "validation failed"
         });
