@@ -19,20 +19,28 @@ export class User {
     private spaceId?: string;
     private x : number;
     private y : number;
+    private ws: WebSocket;
 
-    constructor(private ws: WebSocket) {
+    constructor(ws: WebSocket) {
         this.id = getRandomString(10);
         this.x = 0 ;
         this.y = 0 ;
+        this.ws = ws ;
+        this.initHandlers() ;
     }
 
     initHandlers() {
+ 
         this.ws.on("message" , async (data) => {
+            console.log(data);
             const parsedData = JSON.parse(data.toString());
+            console.log("Paaaaaarswd data");
+            console.log(parsedData);
             switch (parsedData.type) {
                 case "join" :
                     const spaceId = parsedData.payload.spaceId;
                     const token = parsedData.payload.token ;
+                    console.log(token);
                     const userId = (jwt.verify(token , JWT_PASSWORD) as JwtPayload).userId;
 
                     if (!userId) {
@@ -62,7 +70,7 @@ export class User {
                                 x : this.x ,
                                 y : this.y
                             },
-                            users: RoomManager.getInstance().rooms.get(spaceId)?.map((u) => ({id: u.id})) ?? []
+                            users: RoomManager.getInstance().rooms.get(spaceId)?.filter(x => x.id !== this.id)?.map((u) => ({id: u.id})) ?? []
                         }
                     });
                     RoomManager.getInstance().broadcast({
@@ -78,31 +86,32 @@ export class User {
                 case "move":
                     const moveX = parsedData.payload.x;
                     const moveY = parsedData.payload.y;
-                    const xDisplacment = Math.abs(this.x - moveX);
-                    const yDisplacment = Math.abs(this.y - moveY);
-                    if ((xDisplacment == 1 && yDisplacment == 0) || (xDisplacment == 0 && yDisplacment == 1)) {
-                        this.x = moveX ;
-                        this.y = moveY ;
+                    const xDisplacement = Math.abs(this.x - moveX);
+                    const yDisplacement = Math.abs(this.y - moveY);
+                    if ((xDisplacement == 1 && yDisplacement== 0) || (xDisplacement == 0 && yDisplacement == 1)) {
+                        console.log("X");
+                        console.log(moveX);
+                        console.log("Y");
+                        console.log(moveY);
+                        this.x = moveX;
+                        this.y = moveY;
                         RoomManager.getInstance().broadcast({
-                            type: "move" ,
+                            type: "movement",
                             payload: {
                                 x: this.x,
                                 y: this.y
                             }
-                        } , this , this.spaceId!);
-                        return ;
+                        }, this, this.spaceId!);
+                        return;
                     }
 
                     this.send({
-                        type: "movement-rejected" ,
+                        type: "movement-rejected",
                         payload: {
-                            x: this.x ,
+                            x: this.x,
                             y: this.y
                         }
-                    });
-                    break;
-
-                    
+                    });     
             }
         });
     }

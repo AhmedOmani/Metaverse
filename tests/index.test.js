@@ -832,7 +832,8 @@ describe("Websocket tests" , () => {
     let userX , userY ;
 
     async function waitForAndPopLatestMessages(messageArray) {
-        return new Promise(r => {
+        console.log(messageArray);
+        return new Promise(resolve => {
             if (messageArray.length > 0) {
                 resolve(messageArray.shift());
             } else {
@@ -844,6 +845,7 @@ describe("Websocket tests" , () => {
                 }, 100);
             }
         });
+        
     }
 
     async function setupHTTP()  {
@@ -858,7 +860,7 @@ describe("Websocket tests" , () => {
             password,
             type: "admin"
         });
-        adminId = responseSignupAdmin.data.adminId;
+        adminId = responseSignupAdmin.data.userId;
 
         // Signin as admin
         const responseSigninAdmin = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
@@ -911,10 +913,11 @@ describe("Websocket tests" , () => {
         const map = await axios.post(`${BACKEND_URL}/api/v1/admin/map`, {
             thumbnail: "https://thumbnail.com/a.png",
             dimensions: "100x200",
+            name: "Omaniii map",
             defaultElements: [
-                { elementId: elementId, x: 20, y: 20 },
-                { elementId: elementId, x: 18, y: 20 },
-                { elementId: element2Id, x: 20, y: 20 }
+                { elementId: element.data.id , x: 20, y: 20 },
+                { elementId: element.data.id , x: 18, y: 20 },
+                { elementId: element.data.id , x: 20, y: 20 }
             ]
         }, {
             headers: {
@@ -933,32 +936,37 @@ describe("Websocket tests" , () => {
                 authorization: `Bearer ${userToken}`
             }
         });
-        spaceId = space.data.id;
-        
+        spaceId = space.data.spaceId;
     }
 
-    async function setupWebSockets() {
-        ws = new WebSocket(WS_URL);
-        await new Promise(r => {
-            ws.onopen = r
-        });
+    async function setupWs() {
+        ws = new WebSocket(WS_URL)
+
         ws.onmessage = (event) => {
-            wsMessages.push(JSON.parse(event.data)) ;
+            console.log("got back adata 1")
+            console.log(event.data)
+            
+            wsMessages.push(JSON.parse(event.data))
         }
-
-        ws2 = new WebSocket(WS_URL);
         await new Promise(r => {
-            ws2.onopen = r
+          ws.onopen = r
         });
+
+        ws2 = new WebSocket(WS_URL)
+
         ws2.onmessage = (event) => {
-            ws2Messages.push(JSON.parse(event.data)) ;
+            console.log("got back data 2")
+            console.log(event.data)
+            ws2Messages.push(JSON.parse(event.data))
         }
-
+        await new Promise(r => {
+            ws2.onopen = r  
+        });
     }
-
+    
     beforeAll(async () => {
-        setupHTTP() ;
-        setupWebSockets() ;
+        await setupHTTP()
+        await setupWs()
     });
 
     test("Get back ack for joining a space" , async () => {
@@ -969,7 +977,9 @@ describe("Websocket tests" , () => {
                 "token" : adminToken 
             } 
         }));
+        console.log("before");
         const message = await waitForAndPopLatestMessages(wsMessages);
+        console.log("after");
 
         ws2.send(JSON.stringify({
             "type" : "join" ,
@@ -988,7 +998,7 @@ describe("Websocket tests" , () => {
         expect(message.payload.users.length ).toBe(0) ;
         expect(message2.payload.users.length).toBe(1) ;
 
-        expect(message3.type).toBe("user-join");
+        expect(message3.type).toBe("user-joined");
         expect(message3.payload.userId).toBe(userId);
         expect(message3.payload.x).toBe(message2.payload.spawn.x);
         expect(message3.payload.y).toBe(message2.payload.spawn.y);
@@ -1001,8 +1011,8 @@ describe("Websocket tests" , () => {
     });
 
     test("User cant move across the boundry of the wall" , async () => {
-        ws1.send(JSON.stringify({
-            type: "movement" ,
+        ws.send(JSON.stringify({
+            type: "move" ,
             payload : {
                 x : 100000 ,
                 y : 2000000
@@ -1015,8 +1025,8 @@ describe("Websocket tests" , () => {
     });
 
     test("User cant move to two blocks at the same time" , async () => {
-        ws1.send(JSON.stringify({
-            type: "movement" ,
+        ws.send(JSON.stringify({
+            type: "move" ,
             payload : {
                 x : adminX + 2 ,
                 y : adminY 
@@ -1028,26 +1038,29 @@ describe("Websocket tests" , () => {
         expect(message.payload.y).toBe(adminY);
     });
 
-    test("Correct movement should be broadcasted to the other sockets in the room" , async () => {
-        ws1.send(JSON.stringify({
-            type: "movement" ,
-            payload : {
-                x : adminX + 2 ,
-                y : adminY ,
-                userId : adminId
+    test("Correct movement should be broadcasted to the other sockets in the room", async () => {
+        console.log(adminX);
+        console.log(adminY);
+        ws.send(JSON.stringify({
+            type: "move",
+            payload: {
+                x: adminX + 1,
+                y: adminY,
+                userId: adminId
             }
         }));
+
         const message = await waitForAndPopLatestMessages(ws2Messages);
-        expect(message.type).toBe("movement") ;
-        expect(message.payload.x).toBe(adminX + 1);
-        expect(message.payload.y).toBe(adminY);
-    }); 
+        expect(message.type).toBe("movement")
+        expect(message.payload.x).toBe(adminX + 1)
+        expect(message.payload.y).toBe(adminY)
+    });
 
     test("If a user leaves , the other user receives a leave event", async () => {
         ws.close() ;
         const message = await waitForAndPopLatestMessages(ws2Messages);
         expect(message.type).toBe("user-left");
-        expect(message.payload.userId).toBe(adminUserId);    
+        expect(message.payload.userId).toBe(adminId);    
     });
 
 });
